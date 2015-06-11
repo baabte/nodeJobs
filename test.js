@@ -34,6 +34,10 @@ db.once('open', function() {
 var clnBatchMappingSchema = new mongoose.Schema({users:Array},{ collection : 'clnCourseBatchMapping' });
 var clnBatchMapping = mongoose.model('clnBatchMapping',clnBatchMappingSchema);
 
+var clnUserDetailsSchema = new mongoose.Schema({profile:Object,userName:String},{ collection : 'clnUserDetails' });
+var clnUserDetails = mongoose.model('clnUserDetails',clnUserDetailsSchema);
+
+
 var clnTriggersSchema = new mongoose.Schema({status:Number,type:String,companyId:String,data:Object},{ collection : 'clnNotificationTriggers' });
 var clnTriggers = mongoose.model('clnTriggers',clnTriggersSchema);
 
@@ -44,6 +48,19 @@ var clnConfigs = mongoose.model('clnConfigs',clnConfigsSchema);
 
 function sendBatchUpdateMail (data) {
  	
+  // companyName
+  // address
+  // fullName
+  // batchName
+  // newStatus
+console.log(mongoose.Types.ObjectId(data.batchMappingId));
+  clnBatchMapping.findOne({_id:mongoose.Types.ObjectId(data.batchMappingId)},function (err,batchMapping) {
+    console.log(batchMapping);
+  });  
+
+
+
+
  }; 
 
 
@@ -53,7 +70,7 @@ function sendBatchUpdateMail (data) {
 
 clnTriggers.find({
  status:1
- //,companyId:'54978cc57525614f6e3e70d3' // hardcoded for testing
+ ,companyId:'54978cc57525614f6e3e70d3' // hardcoded for testing
  }, function(err, triggers) {
   if (err) return console.error(err);
   for(key in triggers){
