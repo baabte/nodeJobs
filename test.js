@@ -31,9 +31,54 @@ db.once('open', function() {
 });
 
 
+var clnBatchMappingSchema = new mongoose.Schema({users:Array},{ collection : 'clnCourseBatchMapping' });
+var clnBatchMapping = mongoose.model('clnBatchMapping',clnBatchMappingSchema);
+
+var clnTriggersSchema = new mongoose.Schema({status:Number,type:String,companyId:String,data:Object},{ collection : 'clnNotificationTriggers' });
+var clnTriggers = mongoose.model('clnTriggers',clnTriggersSchema);
+
+var clnConfigsSchema = new mongoose.Schema({},{ collection : 'clnNotificationConfigs' });
+var clnConfigs = mongoose.model('clnConfigs',clnConfigsSchema);
 
 
-// var clnCoursesSchema = new mongoose.Schema({},{ collection : 'clnNotificationTriggers' });
+
+function sendBatchUpdateMail (data) {
+ 	
+ }; 
+
+
+
+
+
+
+clnTriggers.find({
+ status:1
+ //,companyId:'54978cc57525614f6e3e70d3' // hardcoded for testing
+ }, function(err, triggers) {
+  if (err) return console.error(err);
+  for(key in triggers){
+
+  	console.log(triggers[key].type);
+  	var configuration;
+  	clnConfigs.findOne({companyId:triggers[key].companyId,configType:triggers[key].type},function (er,config) {
+  		configuration = config;
+  	});
+
+  	switch(triggers[key].type){
+  		case 'batch-status-update' :
+  			 sendBatchUpdateMail(triggers[key].data);
+
+
+  		case 'new-user-registration':break;
+  	}
+
+
+  	//triggers[key].status = 2;
+  	//triggers[key].save();
+
+  }
+
+});
 
 
 // var clnTriggers = mongoose.model('clnTriggers',clnCoursesSchema);
