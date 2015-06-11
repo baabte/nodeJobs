@@ -1,0 +1,25 @@
+{
+  "name": "nodejobs",
+  "version": "1.0.0",
+  "description": "Dependencies of nodeJobes",
+  "main": "test.js",
+  "dependencies": {
+    "cron": "^1.0.9",
+    "http": "0.0.0",
+    "mongoose": "^4.0.5"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": ""
+  },
+  "repository": {
+    "type": "git",
+    "url": "http://github.com/baabte/nodeJobs"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/baabte/nodeJobs/issues"
+  },
+  "homepage": "https://github.com/baabte/nodeJobs"
+}

@@ -2,6 +2,14 @@ var CronJob = require('cron').CronJob;
 var http = require('http');
 var mongoose = require('mongoose');
 	mongoose.connect('mongodb://117.240.93.254/baabtra_db');
+var httpConfig = {
+     host: 'localhost',
+     port: 8000,
+     // path: '/sendNewUserRegistrationMail/',
+     method: 'POST',
+     json: true,
+     headers:{'Content-Type':'application/json','Content-Length':1000000000}
+   };
 // var sec = '*'; // second
 // var min = '*'; // minutes
 // var hh = '*'; //hours
@@ -30,13 +38,15 @@ db.once('open', function() {
   console.log('connected');
 });
 
-
-var clnBatchMappingSchema = new mongoose.Schema({users:Array},{ collection : 'clnCourseBatchMapping' });
+// schemas and modals for fetching data from collections
+var clnBatchMappingSchema = new mongoose.Schema({users:Array,status:String,batchName:String},{ collection : 'clnCourseBatchMapping' });
 var clnBatchMapping = mongoose.model('clnBatchMapping',clnBatchMappingSchema);
 
 var clnUserDetailsSchema = new mongoose.Schema({profile:Object,userName:String},{ collection : 'clnUserDetails' });
 var clnUserDetails = mongoose.model('clnUserDetails',clnUserDetailsSchema);
 
+var clnCompanySchema = new mongoose.Schema({companyName:String,companyLogo:String},{ collection : 'clnCompany' });
+var clnCompany = mongoose.model('clnCompany',clnCompanySchema);
 
 var clnTriggersSchema = new mongoose.Schema({status:Number,type:String,companyId:String,data:Object},{ collection : 'clnNotificationTriggers' });
 var clnTriggers = mongoose.model('clnTriggers',clnTriggersSchema);
@@ -46,16 +56,53 @@ var clnConfigs = mongoose.model('clnConfigs',clnConfigsSchema);
 
 
 
-function sendBatchUpdateMail (data) {
+function sendBatchUpdateMail (data,companyId) {
  	
   // companyName
   // address
   // fullName
   // batchName
   // newStatus
-console.log(mongoose.Types.ObjectId(data.batchMappingId));
+  // companyLogo
+  var dataObj = {};
+  clnCompany.findOne({_id:mongoose.Types.ObjectId(companyId)},function (err,company){
+    // console.log(company.companyName);
+    dataObj.companyName = company.companyName;
+    dataObj.companyLogo = company.companyLogo;
+  });
+// console.log(mongoose.Types.ObjectId(data.batchMappingId));
   clnBatchMapping.findOne({_id:mongoose.Types.ObjectId(data.batchMappingId)},function (err,batchMapping) {
-    console.log(batchMapping);
+    
+    var users = JSON.parse(JSON.stringify(batchMapping.users));
+        dataObj.newStatus = batchMapping.status;
+        dataObj.batchName = batchMapping.batchName;
+    for(key in users)
+    {
+      var userLoginId = users[key].fkUserLoginId;
+      // dataObj.fullName
+      // dataObj.recipient
+      clnUserDetails.findOne({fkUserLoginId:mongoose.Types.ObjectId(userLoginId)},function(error,userDetail){
+        dataObj.fullName = userDetail.profile.firstName+' '+userDetail.profile.lastName;
+        dataObj.recipient = userDetail.userName;
+        httpConfig.path = '/sendBatchStatusUpdateMail/';
+        // console.log(httpConfig);
+           var req = http.request(httpConfig, function(res) {
+             console.log('STATUS: ' + res.statusCode);
+             console.log('HEADERS: ' + JSON.stringify(res.headers));
+             res.setEncoding('utf8');
+             res.on('data', function (chunk) {
+               console.log('BODY: ' + chunk);
+             });
+           });
+
+           var dataSring = JSON.stringify(dataObj);
+            req.write(dataSring);
+            req.end();
+
+
+      });
+
+    }
   });  
 
 
@@ -75,7 +122,7 @@ clnTriggers.find({
   if (err) return console.error(err);
   for(key in triggers){
 
-  	console.log(triggers[key].type);
+  	// console.log(triggers[key].type);
   	var configuration;
   	clnConfigs.findOne({companyId:triggers[key].companyId,configType:triggers[key].type},function (er,config) {
   		configuration = config;
@@ -83,7 +130,7 @@ clnTriggers.find({
 
   	switch(triggers[key].type){
   		case 'batch-status-update' :
-  			 sendBatchUpdateMail(triggers[key].data);
+  			 sendBatchUpdateMail(triggers[key].data,triggers[key].companyId);
 
 
   		case 'new-user-registration':break;
