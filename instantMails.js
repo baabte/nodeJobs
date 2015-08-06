@@ -1,33 +1,9 @@
+var config = require('./config'); // importing config file
 var CronJob = require('cron').CronJob;
 var http = require('http');
 var mongoose = require('mongoose');
-	mongoose.connect('mongodb://117.240.93.254/baabtra_db');
-var httpConfig = {
-     host: 'localhost',
-     port: 8000,
-     // path: '/sendNewUserRegistrationMail/',
-     method: 'POST',
-     json: true,
-     headers:{'Content-Type':'application/json','Content-Length':1000000000}
-   };
-// var sec = '*'; // second
-// var min = '*'; // minutes
-// var hh = '*'; //hours
-// var dom = '*'; // day of month
-// var mm = '*'; // month
-// var dow = '*'; //day of week
-// // var count = 0;
-
-// var job=new CronJob(sec+' '+min+' '+hh+' '+dom+' '+mm+' '+dow, function() {
-//   // count++;
-//   console.log('You will see this message every second');
-//   // if(count==3){
-//   // 	job.stop();
-//   // }
-// }, null, true, 'America/Los_Angeles');
-
-
-//{type:'batch-status-update',data:{batchMappingId:'<string id>',date:'<string date>'},companyId:'<string id>',crmId:'<string rmId>',status:1}
+	mongoose.connect(config.dbString); // connecting to mongo db
+var httpConfig = config.httpConfig;
 
 
 var db = mongoose.connection;
@@ -39,7 +15,7 @@ db.once('open', function() {
 });
 
 // schemas and modals for fetching data from collections
-var clnBatchMappingSchema = new mongoose.Schema({users:Array,status:String,batchName:String},{ collection : 'clnCourseBatchMapping' });
+var clnBatchMappingSchema = new mongoose.Schema({users:Array,status:String,batchName:String,startDate:Date,startTime:String,endTime:String},{ collection : 'clnCourseBatchMapping' });
 var clnBatchMapping = mongoose.model('clnBatchMapping',clnBatchMappingSchema);
 
 var clnUserDetailsSchema = new mongoose.Schema({profile:Object,userName:String},{ collection : 'clnUserDetails' });
@@ -50,6 +26,9 @@ var clnCompany = mongoose.model('clnCompany',clnCompanySchema);
 
 var clnTriggersSchema = new mongoose.Schema({status:Number,type:String,companyId:String,data:Object},{ collection : 'clnNotificationTriggers' });
 var clnTriggers = mongoose.model('clnTriggers',clnTriggersSchema);
+
+var clnCoursesSchema = new mongoose.Schema({},{ collection : 'clnCourses' });
+var clnCourses = mongoose.model('clnCourses',clnCoursesSchema);
 
 var clnConfigsSchema = new mongoose.Schema({},{ collection : 'clnNotificationConfigs' });
 var clnConfigs = mongoose.model('clnConfigs',clnConfigsSchema);
@@ -80,6 +59,9 @@ function sendBatchUpdateMail (data,companyId) {
     var users = JSON.parse(JSON.stringify(batchMapping.users));
         dataObj.newStatus = batchMapping.status;
         dataObj.batchName = batchMapping.batchName;
+        dataObj.startDate = batchMapping.startDate;
+        dataObj.startTime = batchMapping.startTime;
+        dataObj.endTime = batchMapping.endTime;
         var options = JSON.parse(JSON.stringify(httpConfig));
         options.path = '/sendBatchStatusUpdateMail/';
     for(var key in users)
@@ -136,7 +118,7 @@ function findTriggers () {
 
   clnTriggers.find({
      status:1
-     ,companyId:'54978cc57525614f6e3e70d3' // hardcoded for testing
+     //,companyId:'54978cc57525614f6e3e70d3' // hardcoded for testing
      }, function(err, triggers) {
       if (err) return console.error(err);
       saveCompleted = false;
