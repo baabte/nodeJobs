@@ -9,15 +9,12 @@ var app = http.createServer(function (request, response) {
 }).listen(1555); // setting the port to which this application have to listen
 
 var io = require('socket.io').listen(app); // creating a socket server
-    // io.sockets.on('disconnect', function(arg) {
-    //     console.log(arg);
-    // });
-    io.sockets.on('connection', function(socket) {
 
-        socket.on('join',function(data){
-            var uid = uuid.v1();
-            var myData={name:data.name};
-                io.sockets.emit("welcome",{msg:'hai'});
+    io.sockets.on('connection', function(socket) {
+    // here we are using io.sockets for broadcasting the message to all.
+        socket.on('new_notification',function(data){
+              socket.broadcast.emit("notification"+data.loginId,{notification:data.data});
+              socket.emit("notification"+data.loginId,{notification:data.data});
         });
 
     });
