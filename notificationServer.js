@@ -13,8 +13,16 @@ var io = require('socket.io').listen(app); // creating a socket server
     io.sockets.on('connection', function(socket) {
     // here we are using io.sockets for broadcasting the message to all.
         socket.on('new_notification',function(data){
-              socket.broadcast.emit("notification"+data.loginId,{notification:data.data});
-              socket.emit("notification"+data.loginId,{notification:data.data});
+
+
+                data.data._id={};
+                data.data.read = 0;
+              for(key in data.loginIds){
+                data.data._id.$oid = data.ids[key];
+                socket.broadcast.emit("notification"+data.loginIds[key],{notification:data.data});
+                socket.emit("notification"+data.loginId,{notification:data.data});  
+              }
+              
         });
 
     });
