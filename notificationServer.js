@@ -17,6 +17,7 @@ var io = require('socket.io').listen(app); // creating a socket server
 
                 data.data._id={};
                 data.data.read = 0;
+                data.data.createdDate = Date();
               for(key in data.loginIds){
                 data.data._id.$oid = data.ids[key];
                 socket.broadcast.emit("notification"+data.loginIds[key],{notification:data.data});
